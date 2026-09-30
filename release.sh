@@ -74,8 +74,30 @@ rm -rf "$PKGDIR" && mkdir -p "$PKGDIR/pkg"
 cp target/release/glances-rs "$PKGDIR/pkg/glances-rs"
 tar -czf "$PKGDIR/glances-rs-linux-x86_64.tar.gz" -C "$PKGDIR/pkg" glances-rs
 (cd "$PKGDIR" && sha256sum glances-rs-linux-x86_64.tar.gz > SHA256SUMS)
+
+# Release notes are generated from the commits this release actually contains,
+# not a fixed string. Pure-std, zero crates, LGPL-3.0-only is a standing
+# property of the project, not a per-release fact worth repeating.
+NOTES="$PKGDIR/notes.md"
+{
+    echo "Pure-std, zero crates, LGPL-3.0-only."
+    echo
+    echo "## Changes in this release"
+    echo
+    # Previous tag found by walking history, NOT by sorting version numbers:
+    # the `upstream` remote contributes v4.x Glances tags, and `v4.5.7` sorts
+    # above every v0.10.x — a version sort would make it the "previous" tag
+    # and dump the entire project history into every release note.
+    PREV=$(git describe --tags --abbrev=0 "v$VER^" 2>/dev/null || true)
+    if [ -n "$PREV" ]; then
+        git log --no-merges --format='- %s' "$PREV..v$VER" | sed 's/ (v[0-9.]*)$//'
+    else
+        echo "_First tagged release._"
+    fi
+} > "$NOTES"
+
 gh release create "v$VER" --target rust --title "glances-rs v$VER" \
-    --notes "Release v$VER. Pure-std, zero crates, LGPL-3.0-only." \
+    --notes-file "$NOTES" \
     "$PKGDIR/glances-rs-linux-x86_64.tar.gz" "$PKGDIR/SHA256SUMS" || exit 1
 echo "published https://github.com/UberMetroid/glances-rs/releases/tag/v$VER"
 
