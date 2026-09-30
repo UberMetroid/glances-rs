@@ -42,6 +42,10 @@ struct Statvfs {
 // glibc/musl `struct statvfs` on 64-bit Linux is 112–120 bytes; ours is 120.
 const _: () = assert!(std::mem::size_of::<Statvfs>() == 120);
 
+// safe: declaration only — no code runs here. The signature is transcribed
+// from glibc <sys/statvfs.h>; `Statvfs` is `#[repr(C)]` and its size is
+// asserted == 120 below, so the pointer the callee writes through is exactly
+// the size the callee is contracted to write.
 unsafe extern "C" {
     fn statvfs(path: *const c_char, buf: *mut Statvfs) -> i32;
 }
@@ -76,6 +80,12 @@ pub struct FsUsage {
 pub fn statvfs_path(path: &str) -> Result<FsUsage> {
     let c_path = CString::new(path).map_err(|e| GlancesError::Parse(e.to_string()))?;
     let mut buf = Statvfs::default();
+    // safe: `c_path` is a live `CString` — NUL-terminated, and borrowed for
+    // the whole call — so `as_ptr()` stays valid and correctly aligned for the
+    // duration. `&mut buf` yields a unique, writable, correctly aligned pointer
+    // to a `Statvfs` whose `size_of` is statically asserted to 120 bytes, which
+    // is the full glibc struct; the callee writes at most that. The kernel
+    // cannot retain either pointer past the call.
     let rc = unsafe { statvfs(c_path.as_ptr(), &mut buf) };
     if rc != 0 {
         return Err(GlancesError::Other(format!("statvfs({}) failed", path)));
@@ -125,6 +135,11 @@ mod tests {
         // at an oversized byte buffer via a Statvfs-typed pointer cast.
         let c = CString::new("/").unwrap();
         let mut raw = [0xAAu8; 256];
+        // safe: deliberately over-sized (256 bytes) so the canary at
+        // `raw[120..]` can prove statvfs did not write past the struct. The
+        // callee is only ever handed a prefix of this buffer, and the extra
+        // bytes are ours, initialised to 0xAA, so no adjacent memory is
+        // reachable from the callee's side. `c` is a live `CString`.
         let rc = unsafe { statvfs(c.as_ptr(), raw.as_mut_ptr() as *mut Statvfs) };
         assert_eq!(rc, 0);
         let touched_beyond = raw[120..].iter().position(|b| *b != 0xAA);

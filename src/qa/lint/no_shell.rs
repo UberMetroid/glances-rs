@@ -1,4 +1,7 @@
-//! AC-1 / §3.5.4 lint: no shell expansion. `safe_run.rs` uses argv-only.
+//! AC-1 / §3.5.4 lint: no shell expansion. Every subprocess in `src/` is
+//! spawned argv-only — `src/core/actions/run.rs`, `src/core/actions/mod.rs`,
+//! `src/core/password/prompt.rs`, and the `smart`/`vms`/`gpu_nvidia`/`power`
+//! plugins. None of them go through an interpreter.
 
 use std::fs;
 use std::path::Path;

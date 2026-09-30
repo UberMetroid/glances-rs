@@ -1,13 +1,15 @@
-//! AC-11 lint: no `unsafe` outside src/platform/* and src/exec/safe_run.rs.
+//! AC-11 lint: no `unsafe` outside the platform layer.
+//!
+//! `src/platform/linux/` is the only directory that may contain `unsafe`.
+//! There is no macOS or Windows code in this tree, so no other slot is
+//! allowlisted. A file outside the allowlist is excused only if it carries a
+//! `// safe:` note (file-level marker, see AGENTS.md §6).
 
 use std::fs;
 use std::path::Path;
 
 const ALLOWLIST: &[&str] = &[
     "src/platform/linux/",
-    "src/platform/macos/",
-    "src/platform/windows/",
-    "src/exec/safe_run.rs",
 ];
 
 #[test]

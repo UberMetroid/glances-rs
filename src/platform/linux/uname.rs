@@ -22,6 +22,9 @@ struct Utsname {
 
 const _: () = assert!(std::mem::size_of::<Utsname>() == 6 * UTS_LEN);
 
+// safe: declaration only — no code runs here. The signature is transcribed
+// from glibc <sys/utsname.h>; `Utsname` is `#[repr(C)]` with its size asserted
+// to 6 * 65 bytes below, matching the six-char-array layout the kernel fills.
 unsafe extern "C" {
     fn uname(buf: *mut Utsname) -> i32;
 }
@@ -42,6 +45,11 @@ pub struct UnameInfo {
 }
 
 fn read_field(f: &[c_char; UTS_LEN]) -> String {
+    // safe: `f` is a live 65-byte array that the kernel has filled with a
+    // NUL-terminated string (POSIX requires each utsname field to be
+    // NUL-terminated), so a NUL byte is guaranteed to exist within the 65
+    // bytes we own and `CStr::from_ptr` cannot read past the array. The
+    // resulting borrow is confined to this expression.
     unsafe { CStr::from_ptr(f.as_ptr()) }.to_string_lossy().into_owned()
 }
 
@@ -56,6 +64,10 @@ pub fn uname_info() -> Option<UnameInfo> {
         machine: [0; UTS_LEN],
         domainname: [0; UTS_LEN],
     };
+    // safe: `&mut buf` is a unique, writable, correctly aligned pointer to a
+    // `Utsname` fully initialised to zero and statically sized to exactly the
+    // six 65-byte fields the kernel fills. The kernel writes all 390 bytes and
+    // NUL-terminates each field, so nothing beyond `buf` is touched.
     let rc = unsafe { uname(&mut buf) };
     if rc != 0 {
         return None;
