@@ -1,8 +1,8 @@
 //! TCP accept loop — one thread per connection.
 //!
 //! This is a deliberately simple server: no thread pool, no async, no
-//! keep-alive. Python Glances' `outputs/web` uses a threaded WSGI server
-//! (werkzeug's `ThreadedWSGIServer`) so we mirror that with `std::thread::spawn`.
+//! keep-alive. One thread per connection via `std::thread::spawn`, the
+//! threading model conventional threaded WSGI servers use.
 //!
 //! Each connection:
 //!   1. Read up to MAX_HEADER_BYTES.

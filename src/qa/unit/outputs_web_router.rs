@@ -111,7 +111,7 @@ fn versioned_history_not_shadowed_by_generic_arm() {
 
 #[test]
 fn root_serves_live_dashboard() {
-    // Like upstream, `/` is the live UI — never a landing page.
+    // `/` is the live UI — never a landing page.
     let (stats, args) = live_ctx();
     let ctx = test_ctx(&stats, &args);
     for path in ["/", "/index.html", "/dashboard"] {
@@ -140,7 +140,7 @@ fn versioned_aggregates_status_and_lists() {
 
 #[test]
 fn values_and_description_reject_extra_segments() {
-    // /api/4/cpu/total/description is an upstream ITEM route, not our
+    // /api/4/cpu/total/description is an ITEM route, not our
     // whole-plugin description: 404 rather than the wrong shape.
     let (stats, args) = live_ctx();
     let ctx = test_ctx(&stats, &args);

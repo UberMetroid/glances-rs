@@ -53,7 +53,7 @@ impl Plugin for SystemPlugin {
     fn model_mut(&mut self) -> Option<&mut GlancesPluginModel> { Some(&mut self.base) }
     fn stats_mut(&mut self) -> &mut Value { &mut self.base.stats }
     fn update_snmp(&mut self, ctx: &crate::core::snmp::SnmpCtx) -> Result<()> {
-        // Upstream `system` snmp table: hostname + full sysDescr.
+        // `system` snmp table: hostname + full sysDescr.
         let m = crate::core::snmp::get_map(&ctx.client, &[
             ("hostname", crate::core::snmp::OID_SYS_NAME),
             ("system_name", crate::core::snmp::OID_SYS_DESCR),

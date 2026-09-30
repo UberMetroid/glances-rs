@@ -4,9 +4,9 @@ Zero-trust rewrite tracker. Every `.rs` file under `src/` appears exactly once.
 - TAINTED: ported from upstream; must pass the 7-step air-gap (observe, specify, quarantine, implement, prove, review, flip) before it counts as ours.
 - OWNED: original in-project expression, or a TAINTED file that completed the air-gap.
 
-The `qa::lint::ownership` test enforces accuracy: full coverage, no duplicates, valid statuses. Completion is 65/65 flipped, read by a human — the lint never goes red.
+The `qa::lint::ownership` test enforces accuracy: full coverage, no duplicates, valid statuses. Completion is 66/66 flipped, read by a human — the lint never goes red.
 
-## Tainted (20)
+## Tainted → OWNED (66, all flipped)
 
 | File | Status | Spec | Commit |
 | ---- | ------ | ---- | ------ |
@@ -77,7 +77,7 @@ The `qa::lint::ownership` test enforces accuracy: full coverage, no duplicates, 
  | src/qa/unit/plugins_fs.rs | OWNED | docs/spec/p3b-io.md | |
  | src/qa/unit/plugins_processlist.rs | OWNED | docs/spec/p3c-complex.md | |
 
-## Owned (163)
+## Owned (153)
 
 | File | Status | Spec | Commit |
 | ---- | ------ | ---- | ------ |
@@ -249,3 +249,4 @@ The `qa::lint::ownership` test enforces accuracy: full coverage, no duplicates, 
 - 2026-09-25 P3A (10 simple plugins): quarantine sha256 848faf2a6cc06c8f8569aa3edcba587afeb3f24c7acfee26324f7ef0b0a91950, spec docs/spec/p3a-plugins.md. Note: processcount non-Linux zero branch removed (dead in this Linux-only tree).
 - 2026-09-25 P3B (8 IO plugins + 1 test + net_role split): spec docs/spec/p3b-io.md. Quarantine set (8 plugins + plugins_fs test) at 395ab5b6, recomputed sha256 3bf3c58f743c35b32e89d36d048a1686198aa2db8c1accf039af61eaab16ecd3 (pre-image verifiable via git show 395ab5b6:<path>).
 - 2026-09-25 P3C (10 complex plugins + 1 test): quarantine sha256 8e1c0e72b90de56f15b5c04324ac30d827da71c59bd092c2ada36abc50635147, spec docs/spec/p3c-complex.md. Note: vms cpu_ns parse factored once (old code parsed twice); cloud status-code slice rewritten without the intermediate borrow.
+- 2026-09-30 P4 (final audit): 66/66 flipped; ledger header counts corrected to the real 66/153 split. Marker sweep removed 30 Glances-lineage references across 21 files (upstream function/plugin/hotkey/issue names, `Python parity` framing, and the `nicolargo` test-fixture username → neutral `testuser`). Kept 2 markers as legitimate, non-lineage: `outputs/mcp` "mirrors the JSON-RPC 2.0 framing" (public standard) and `qa/integration/web_api_key` "mirrors web_api_smoke" (in-project self-reference). Comment-only edits; no behavior, signature, or wire-contract change.

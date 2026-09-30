@@ -1,9 +1,9 @@
 //! Public-IP fetch + the process-wide refresh daemon.
 //!
-//! Opt-in like upstream Glances: nothing is fetched unless `[ip]`
-//! `public_api` is configured (and `public_disabled` isn't true). The
-//! daemon is bounded — at most one thread per process, started only
-//! via `spawn_daemon()` from `register()` after `configure()` ran.
+//! Opt-in: nothing is fetched unless `[ip]` `public_api` is configured
+//! (and `public_disabled` isn't true). The daemon is bounded — at most
+//! one thread per process, started only via `spawn_daemon()` from
+//! `register()` after `configure()` ran.
 //!
 //! Supported config keys (`[ip]` section):
 //!   - `public_api`              — required; `http://host[:port]/path`

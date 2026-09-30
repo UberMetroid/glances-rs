@@ -1,7 +1,7 @@
 //! Snapshot plugin filtering for `--stdout-csv` / `--stdout-json`.
 //!
-//! Keeps only the listed top-level plugins (`--stdout-csv <list>`
-//! parity). `None`/empty spec is a no-op. Pure pull-side shaping:
+//! Keeps only the plugins named by `--stdout-csv <list>`. `None`/empty
+//! spec is a no-op. Pure pull-side shaping:
 //! nothing here sends data anywhere.
 
 use crate::core::value::Value;

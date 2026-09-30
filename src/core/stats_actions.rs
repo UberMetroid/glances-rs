@@ -1,12 +1,12 @@
-//! Per-tick alert-command dispatch (upstream get_limit_action + run).
+//! Per-tick alert-command dispatch.
 
 use super::actions::GlancesActions;
 use super::plugin::Plugin;
 use super::value::Value;
 
 /// Fire configured `*_action` commands for a plugin's live
-/// CAREFUL/WARNING/CRITICAL triggers (upstream `get_limit_action` +
-/// `GlancesActions.run` parity). Mustache dict = top-level scalar stats.
+/// CAREFUL/WARNING/CRITICAL triggers. Mustache dict = top-level scalar
+/// stats.
 pub(crate) fn run_plugin_actions(plugin: &mut dyn Plugin, actions: &mut GlancesActions) {
     let Some(model) = plugin.model_mut() else { return };
     let triggers: Vec<(String, String)> = model

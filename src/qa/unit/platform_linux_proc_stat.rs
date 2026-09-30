@@ -26,7 +26,7 @@ fn parse_normal_per_cpu() {
 
 #[test]
 fn cpu_times_busy_and_total() {
-    // psutil parity: busy = user+nice+system+irq+softirq (iowait/steal
+    // busy = user+nice+system+irq+softirq (iowait/steal
     // are wait states, NOT busy); total = sum of ALL columns including
     // guest (which sits inside user — psutil counts it twice).
     let t = proc_stat::CpuTimes {

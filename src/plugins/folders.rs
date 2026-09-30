@@ -1,8 +1,7 @@
 //! Folders plugin — recursive size of user-configured directories.
 //!
-//! Glances' Python plugin walks a list of paths from the config file and
-//! sums the bytes of every regular file beneath each one. We mirror that
-//! behaviour using `std::fs::read_dir` recursively.
+//! Walks a list of paths from the config file and sums the bytes of every
+//! regular file beneath each one, using `std::fs::read_dir` recursively.
 //!
 //! Output is a `Value::Object` keyed by absolute folder path, with the
 //! value being the total bytes consumed by regular files underneath.

@@ -7,7 +7,7 @@ const NORMAL: &str = include_str!("../fixtures/proc/meminfo_normal.txt");
 #[test]
 fn parse_returns_bytes_not_kilobytes() {
     let m = proc_meminfo::parse(NORMAL).unwrap();
-    // Fixture is in kB; fields must be kB * 1024 (psutil byte parity).
+    // Fixture is in kB; fields must be kB * 1024 (bytes).
     assert_eq!(m.total, 16384000 * 1024);
     assert_eq!(m.free, 8192000 * 1024);
     assert_eq!(m.available, 12288000 * 1024);
@@ -106,7 +106,7 @@ fn read_or_error() {
 
 #[test]
 fn parse_collects_active_and_inactive() {
-    // Upstream mem contract: Active/Inactive are first-class fields.
+    // mem contract: Active/Inactive are first-class fields.
     // `Active(anon)`-style subkeys must NOT leak into them.
     let m = proc_meminfo::parse(NORMAL).unwrap();
     assert_eq!(m.active, 4096000 * 1024);
@@ -115,7 +115,7 @@ fn parse_collects_active_and_inactive() {
 
 #[test]
 fn parse_arcstats_reads_size_and_c_min() {
-    // Upstream zfs_stats: two header lines, then `name _ value` rows.
+    // zfs_stats: two header lines, then `name _ value` rows.
     let text = "kstat+zfs:0:arcstats:magic\nname type data\nsize 4 1073741824\nc_min 4 67108864\nc_max 4 2147483648\n";
     assert_eq!(proc_meminfo::parse_arcstats(text), Some((1073741824, 67108864)));
     assert_eq!(proc_meminfo::parse_arcstats("a\nb\nc_max 4 1\n"), None);

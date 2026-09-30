@@ -3,7 +3,7 @@
 //! Probing yields PCI bus ids (`0000:01:00.0`); dashboards match
 //! `gpu_id` against per-vendor numbers (`nvidia0`, `intel0`), so
 //! `assign_gpu_ids` hands those out in enumeration order. Rows also
-//! carry the upstream aliases `proc` (load %), `mem` (VRAM %), and
+//! carry the compatibility aliases `proc` (load %), `mem` (VRAM %), and
 //! `temperature` (°C) next to the native detail fields.
 
 use std::collections::BTreeMap;
@@ -64,7 +64,7 @@ pub fn assign_gpu_ids(infos: &mut [GpuInfo]) {
 }
 
 /// One card as a JSON object: identity keys (`key`, `gpu_id`, `pci`,
-/// `vendor`, `name`, `kind`), upstream aliases (`proc`, `mem`,
+/// `vendor`, `name`, `kind`), compatibility aliases (`proc`, `mem`,
 /// `temperature`), native readings, `clients` (pid, name, service,
 /// NVIDIA-only mem_mb, per-client transcoding), and the card-level
 /// `transcoding` / `transcoding_by` pair.

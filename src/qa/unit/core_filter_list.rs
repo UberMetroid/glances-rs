@@ -35,11 +35,11 @@ fn bare_pattern_needs_a_fullmatch() {
 
 #[test]
 fn key_prefix_targets_one_field() {
-    let f = rule("username:nicolargo");
-    assert_eq!((f.key(), f.pattern()), (Some("username"), Some("nicolargo")));
+    let f = rule("username:testuser");
+    assert_eq!((f.key(), f.pattern()), (Some("username"), Some("testuser")));
     let hit = process(&[
         ("name", Value::String("snake".into())),
-        ("username", Value::String("nicolargo".into())),
+        ("username", Value::String("testuser".into())),
     ]);
     let miss = process(&[
         ("name", Value::String("snake".into())),
@@ -79,15 +79,15 @@ fn broken_pattern_disables_and_clear_resets() {
 #[test]
 fn lists_or_and_replace_on_set() {
     let mut fl = GlancesFilterList::new();
-    fl.set_filter(".*python.*,username:nicolargo");
+    fl.set_filter(".*python.*,username:testuser");
     assert!(fl.is_filtered(&named("python is in the place", &["x"])));
     assert!(!fl.is_filtered(&named("snake is in the place", &["x"])));
     let user_hit = process(&[
         ("name", Value::String("snake is in the place".into())),
-        ("username", Value::String("nicolargo".into())),
+        ("username", Value::String("testuser".into())),
     ]);
     assert!(fl.is_filtered(&user_hit));
-    fl.set_filter("username:nicolargo");
+    fl.set_filter("username:testuser");
     assert!(!fl.is_filtered(&named("python is in the place", &["x"])));
     fl.clear();
     assert!(fl.is_empty());

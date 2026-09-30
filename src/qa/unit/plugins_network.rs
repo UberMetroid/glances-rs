@@ -115,7 +115,7 @@ fn plugin_get_key_returns_interface_name() {
 
 #[test]
 fn first_tick_emits_deltas_not_cumulative() {
-    // Upstream `_manage_rate`: plain fields are tick deltas (0 with no
+    // `_manage_rate`: plain fields are tick deltas (0 with no
     // baseline), gauges carry the cumulative counters, and the window
     // is `time_since_update`. No sleeps, no live-value asserts.
     let mut p = NetworkPlugin::new();

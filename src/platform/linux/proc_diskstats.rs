@@ -23,7 +23,7 @@ pub struct DiskStats {
     pub writes_completed: u64,
     pub sectors_written: u64,
     /// Milliseconds spent reading/writing (fields 7 and 11) — feeds
-    /// the per-op latency view (`L` hotkey parity).
+    /// the per-op latency view.
     pub time_read_ms: u64,
     pub time_write_ms: u64,
 }

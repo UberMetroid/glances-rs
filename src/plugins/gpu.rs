@@ -135,8 +135,8 @@ pub fn probe_card(card_dir: &Path) -> GpuInfo {
     let kind = classify_kind(&vendor, &pci, label.as_deref()).to_string();
     let util_pct = gpu_sysfs::read_util(card_dir, &vendor);
     let freq_mhz = gpu_sysfs::read_freq_mhz(card_dir, &vendor);
-    // Upstream-style `gpu_id` (`nvidia0`, ...) is assigned in
-    // update() once all cards are enumerated (see gpu_format).
+    // `gpu_id` (`nvidia0`, ...) is assigned in update() once all cards are
+    // enumerated (see gpu_format).
     GpuInfo {
         gpu_id: String::new(), pci, vendor, name, kind, util_pct, freq_mhz,
         mem_used_mb: None, mem_total_mb: None, temp_c: None,

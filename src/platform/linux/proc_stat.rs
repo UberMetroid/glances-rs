@@ -30,18 +30,16 @@ pub struct CpuTimes {
 }
 
 impl CpuTimes {
-    /// Busy time — psutil `busy_time` parity:
-    /// `user + nice + system + irq + softirq`.
+    /// Busy time: `user + nice + system + irq + softirq`.
     /// `iowait`/`steal` are wait states, not work; `guest`/`guest_nice`
     /// are already inside `user`/`nice` per proc(5) and must not be
     /// counted twice.
     pub fn busy(&self) -> u64 {
         self.user + self.nice + self.system + self.irq + self.softirq
     }
-    /// Total time — psutil `total_time` parity: the sum of ALL columns,
-    /// including `guest`/`guest_nice` (they sit inside `user`/`nice`, so
-    /// they count twice — this mirrors psutil exactly and is the
-    /// denominator for its per-state percentages).
+    /// Total time: the sum of ALL columns, including `guest`/`guest_nice`
+    /// (they sit inside `user`/`nice`, so they count twice) — this is the
+    /// denominator for the per-state percentages.
     pub fn total(&self) -> u64 {
         self.user + self.nice + self.system + self.idle + self.iowait
             + self.irq + self.softirq + self.steal
@@ -74,8 +72,7 @@ pub struct ProcStat {
     pub per_cpu: Vec<CpuTimes>,
     pub ctxt: u64,
     pub intr: u64,
-    /// Total softirq count from the `softirq` line's first field —
-    /// psutil `cpu_stats().soft_interrupts` parity.
+    /// Total softirq count from the `softirq` line's first field.
     pub softirq_total: u64,
     pub btime: u64,
     pub processes: u64,

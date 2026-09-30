@@ -13,9 +13,9 @@ pub struct Endpoint {
 }
 
 /// Served REST endpoints. Every entry must route to a handler (a
-/// router test pins this); unserved upstream shapes (`/{plugin}/{item}`,
-/// `/top/{n}`, per-plugin `/limits`, `/docs`) are documented in
-/// `docs/api.md` as 404s instead of being listed here.
+/// router test pins this); deliberately unserved shapes
+/// (`/{plugin}/{item}`, `/top/{n}`, per-plugin `/limits`, `/docs`) are
+/// documented in `docs/api.md` as 404s instead of being listed here.
 pub const ENDPOINTS: &[Endpoint] = &[
     Endpoint { method: "GET",  path: "/api/4/status",
                description: "Liveness check: {\"version\"} of this build." },

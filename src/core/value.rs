@@ -84,9 +84,8 @@ impl From<BTreeMap<String, Value>> for Value {
     fn from(v: BTreeMap<String, Value>) -> Self { Value::Object(v) }
 }
 
-/// Serialize a `Value` to a JSON string. Mirrors Python Glances'
-/// `glances.globals.json_dumps`: floats formatted without NaN/Infinity
-/// (which would break JSON parsers downstream).
+/// Serialize a `Value` to a JSON string: floats are formatted without
+/// NaN/Infinity, which would break JSON parsers downstream.
 pub fn to_json(v: &Value) -> String {
     let mut buf = String::new();
     write_json(v, &mut buf);

@@ -1,4 +1,4 @@
-//! Tests for the IRQ plugin (Python-parity schema: irq_line/irq_rate).
+//! Tests for the IRQ plugin (schema: irq_line/irq_rate).
 
 use crate::core::plugin::Plugin;
 use crate::core::value::Value;
@@ -73,7 +73,7 @@ fn update_on_linux_does_not_panic() {
 
 #[test]
 fn update_is_registered_only_when_enabled() {
-    // irq is upstream-disabled by default: register_filtered must not
+    // irq is disabled by default: register_filtered must not
     // register it unless --enable-plugin names it.
     let stats = crate::core::stats::GlancesStats::new(1.0);
     crate::plugins::register_filtered(&stats, &[], &[]);

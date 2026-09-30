@@ -5,7 +5,7 @@ use crate::outputs::api_doc::{render, ENDPOINTS};
 #[test]
 fn endpoints_collection_is_non_empty() {
     assert!(!ENDPOINTS.is_empty());
-    // Upstream Python Glances has ~20 documented endpoints; we should
+    // Glances exposes ~20 documented endpoints; we should
     // expose at least a dozen to be useful.
     assert!(ENDPOINTS.len() >= 12, "expected ≥12 endpoints, got {}", ENDPOINTS.len());
 }

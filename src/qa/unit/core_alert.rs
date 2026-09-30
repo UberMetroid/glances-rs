@@ -1,5 +1,4 @@
-//! Conformance tests for the alert pipeline (upstream `get_alert` /
-//! `update_views` / default-limits parity).
+//! Conformance tests for the alert pipeline.
 
 use std::collections::BTreeMap;
 
@@ -27,7 +26,7 @@ fn alert_chain_walks_careful_warning_critical() {
     assert_eq!(m.get_alert(60.0, 0.0, 100.0, "user", None, false, true, None, no_events()), "CAREFUL");
     assert_eq!(m.get_alert(80.0, 0.0, 100.0, "user", None, false, true, None, no_events()), "WARNING");
     assert_eq!(m.get_alert(95.0, 0.0, 100.0, "user", None, false, true, None, no_events()), "CRITICAL");
-    // Trigger is tracked (manage_threshold parity).
+    // Trigger is tracked.
     assert_eq!(m.thresholds.get("cpu_user").map(String::as_str), Some("CRITICAL"));
 }
 
@@ -54,8 +53,8 @@ fn stat_limit_beats_plugin_limit() {
 fn minimum_forces_careful_and_is_max_never_survives() {
     let mut m = model_with_limits("cpu", &[("cpu_user_careful", 50.0)]);
     assert_eq!(m.get_alert(50.0, 60.0, 100.0, "user", None, false, true, None, no_events()), "CAREFUL");
-    // Upstream truth: the initial MAX is overwritten by the chain in
-    // every path (no limits → DEFAULT here).
+    // The initial MAX is overwritten by the chain in every path
+    // (no limits → DEFAULT here).
     let mut m2 = model_with_limits("cpu", &[]);
     assert_eq!(m2.get_alert(10.0, 0.0, 100.0, "user", None, true, true, None, no_events()), "DEFAULT");
 }
@@ -114,7 +113,7 @@ fn cpu_ctx_switches_defaults_scale_with_cores() {
     use crate::core::alerts::default_limit_entries;
     let mut m = GlancesPluginModel::new("cpu", Value::Object(BTreeMap::new()));
     m.apply_default_limits(&default_limit_entries("cpu"), 8);
-    // Upstream #1212: base = 500000 * 10% * ncpu.
+    // base = 500000 * 10% * ncpu.
     assert_eq!(m.limits.get("cpu_ctx_switches_critical"), Some(&LimitValue::Float(400000.0)));
     assert_eq!(m.limits.get("cpu_user_careful"), Some(&LimitValue::Float(50.0)));
 }

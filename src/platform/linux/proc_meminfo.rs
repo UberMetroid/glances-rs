@@ -29,9 +29,9 @@ pub fn read() -> Result<MemInfo> {
     parse(&text)
 }
 
-/// Parse /proc/meminfo content. All returned fields are **bytes**
-/// (psutil parity): the kernel reports kB, converted here once so every
-/// consumer gets the right unit.
+/// Parse /proc/meminfo content. All returned fields are **bytes**: the
+/// kernel reports kB, converted here once so every consumer gets the
+/// right unit.
 pub fn parse(text: &str) -> Result<MemInfo> {
     let mut out = MemInfo::default();
     for line in text.lines() {
@@ -92,13 +92,13 @@ pub fn percent_used(info: &MemInfo) -> f64 {
     (info.total.saturating_sub(avail) as f64 / info.total as f64) * 100.0
 }
 
-/// ZFS active when `/proc/spl/kstat/zfs` exists (upstream `zfs_enable`).
+/// ZFS active when `/proc/spl/kstat/zfs` exists.
 pub fn zfs_enabled() -> bool {
     fs::metadata("/proc/spl/kstat/zfs").map(|m| m.is_dir()).unwrap_or(false)
 }
 
-/// Read ZFS ARC `(size, c_min)` in bytes from arcstats (upstream
-/// `zfs_stats`: skip two header lines, `name _ value` triples).
+/// Read ZFS ARC `(size, c_min)` in bytes from arcstats: skip two header
+/// lines, then read `name _ value` triples.
 /// Returns `None` when ZFS is absent or `size` is missing.
 pub fn zfs_arc() -> Option<(u64, u64)> {
     let text = fs::read_to_string("/proc/spl/kstat/zfs/arcstats").ok()?;
@@ -122,7 +122,7 @@ pub fn parse_arcstats(text: &str) -> Option<(u64, u64)> {
 }
 
 pub fn used_mem(info: &MemInfo) -> u64 { used(info) }
-/// Free memory is raw MemFree — psutil's `vm.free` parity. `available`
-/// (MemAvailable) is a separate, larger metric the plugin exposes
-/// separately; conflating them makes `free` report the wrong number.
+/// Free memory is raw MemFree, which is a different and smaller number
+/// than `available` (MemAvailable). The plugin exposes them separately;
+/// conflating them makes `free` report the wrong number.
 pub fn free_mem(info: &MemInfo) -> u64 { info.free }
