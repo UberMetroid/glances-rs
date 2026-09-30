@@ -61,17 +61,17 @@ pages wearing a trench coat.
 
 ## 3. Naming
 
-`[POLICY]` Name the function, not the drawer. These names are banned:
+`[GATE]` Name the function, not the drawer. These names are banned:
 `util.rs`, `utils.rs`, `helper.rs`, `helpers.rs`, `common.rs`, `misc.rs`,
-`shared.rs`, `base.rs`, `core.rs`.
+`shared.rs`, `base.rs`, `core.rs` — `qa::lint::naming::no_drawer_named_rs_files`.
 
 **Why:** a file named `utils` is an admission that nobody could describe its job.
 The tree should read as a map of the running system — `core/`, `plugins/`,
 `platform/linux/`, `outputs/web/` — with paths that name subsystems and files
 that name the one thing they own (`lease_table`, `verify_peer`, `seal_weights`).
 
-The tree is currently clean of these names. There is no lint; keep it that way by
-hand, and see §9 if you want it enforced.
+Note the ban is on *filenames*: a `src/core/` **directory** is fine, a
+`src/core.rs` **file** is not.
 
 `[POLICY]` Test files name their subject: `plugins_cpu.rs` tests the cpu plugin.
 `_tests.rs` siblings are for tests that would otherwise push a page over the cap.
@@ -166,8 +166,12 @@ Order matters. Each stage must be green before the next.
    do run by default).
 2. `cargo clippy --all-targets` — zero errors *and* zero warnings.
 3. `./crosscheck.sh http://localhost:61208` — live 20-check cross-check against
-   the running service, for behavior-visible changes.
-4. `./release.sh X.Y.Z --service` — bumps the version across its five pinned
+   the running service, comparing `/api/4` values against OS tools that share no
+   code with the daemon (`df`, `/proc`, `iproute2`, `ss`, hwmon, `nvidia-smi`).
+4. `./replay.sh http://localhost:61208` — replays the v0.10.72 capture corpus
+   against a live server and compares JSON **shape**, not values. This is the
+   frozen-wire-contract gate: a renamed, dropped, or added key fails it.
+5. `./release.sh X.Y.Z --service` — bumps the version across its five pinned
    files (`Cargo.toml`, `Cargo.lock`, `README.md`, `docs/api.md`,
    `assets/static/openapi.json`), re-runs gates **after** the bump, commits,
    pushes, tags, publishes the release with SHA256SUMS, then cuts the service
@@ -203,12 +207,12 @@ structure, not by a line count borrowed from Rust.
 
 Stated plainly so nobody mistakes policy for a gate:
 
-- **Banned file names** (§3) have no lint. `src/qa/lint/` is the place to add one.
 - **Directory density** is unbounded. `src/qa/unit/` holds 67 files, `src/plugins`
   41. Splitting crowded directories by functional area is desirable but not
-  required, and is not a gate.
+  required, and is not a gate. Everything else in this document is enforced.
 - **No `unwrap()` budget.** The ratchet is "no new fallible unwraps", not a count.
   See §6 for the current surface.
 
-Adding a gate means writing a test in `src/qa/lint/`. Prefer that over adding
+Adding a gate means writing a test in `src/qa/lint/` — and registering the new
+file in `docs/ownership.md`, or the ownership lint will fail. Prefer a test over
 prose here, because prose cannot fail a build.

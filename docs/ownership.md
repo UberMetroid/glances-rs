@@ -77,7 +77,7 @@ The `qa::lint::ownership` test enforces accuracy: full coverage, no duplicates, 
  | src/qa/unit/plugins_fs.rs | OWNED | docs/spec/p3b-io.md | |
  | src/qa/unit/plugins_processlist.rs | OWNED | docs/spec/p3c-complex.md | |
 
-## Owned (153)
+## Owned (154)
 
 | File | Status | Spec | Commit |
 | ---- | ------ | ---- | ------ |
@@ -169,6 +169,7 @@ The `qa::lint::ownership` test enforces accuracy: full coverage, no duplicates, 
  | src/qa/integration/web_api_smoke.rs | OWNED | | |
  | src/qa/lint/line_cap.rs | OWNED | | |
  | src/qa/lint/mod.rs | OWNED | | |
+ | src/qa/lint/naming.rs | OWNED | | |
  | src/qa/lint/no_crates.rs | OWNED | | |
  | src/qa/lint/no_shell.rs | OWNED | | |
  | src/qa/lint/ownership.rs | OWNED | | |

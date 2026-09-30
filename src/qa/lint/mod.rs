@@ -9,3 +9,4 @@ pub mod line_cap;
 pub mod ownership;
 pub mod unsafe_allowlist;
 pub mod no_shell;
+pub mod naming;

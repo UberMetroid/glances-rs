@@ -4,7 +4,7 @@
 # Bakes in the release checklist so no step can be skipped (the P3B
 # release missed the openapi pin and a ledger note — this script
 # exists so that never happens again):
-#   1. tree clean, on rust branch, all 6 version pins agree
+#   1. tree clean, on rust branch, all 5 version pins agree
 #   2. bump pins, rebuild lockfile
 #   3. full test suite + clippy gates (AFTER the bump)
 #   4. commit + push, tag + push tag
