@@ -60,8 +60,58 @@ cargo test --quiet || { echo "TESTS FAILED at $VER — tree left dirty for inspe
 [ "$(cargo clippy --all-targets 2>&1 | grep -cE '^(error|warning)')" = "0" ] \
     || { echo "CLIPPY FAILED at $VER" >&2; exit 1; }
 
-# ---- 4. commit + tag ----
+# ---- 4. site changelog + header, then commit + tag ----
+# The about page went stale once already (header pinned at v0.10.42 while the
+# changelog stopped at v0.10.21) precisely because updating it was a manual
+# step nobody could remember. Do it here, before the commit, so it rides along
+# in the release commit instead of being left dirty.
+SITE="$ROOT/site/about.html"
+if [ -f "$SITE" ]; then
+    sed -i.bak -E "s|(about / )v[0-9]+\.[0-9]+\.[0-9]+|\1v$VER|" "$SITE" && rm -f "$SITE.bak"
+    if ! grep -q "<span class=\"tag\">v$VER</span>" "$SITE"; then
+        # Summarise the work since the previous tag. The release commit itself
+        # does not exist yet and would be noise, so the range ends at HEAD.
+        SITE_PREV=$(git describe --tags --abbrev=0 HEAD 2>/dev/null || true)
+        python3 - "$SITE" "$VER" "$SITE_PREV" <<'PY'
+import subprocess, sys
+path, ver, prev = sys.argv[1], sys.argv[2], sys.argv[3]
+rng = f"{prev}..HEAD" if prev else "HEAD"
+lines = [l for l in subprocess.run(
+    ["git", "log", "--no-merges", "--format=%s", rng],
+    capture_output=True, text=True).stdout.splitlines()]
+# Drop release commits: they are bookkeeping, not a change worth describing.
+lines = [l for l in lines if not l.startswith("Release v")]
+if not lines:
+    # Never block a release over a cosmetic site update.
+    print("site changelog: no substantive commits in range, skipping", file=sys.stderr)
+    raise SystemExit(0)
+text = "; ".join(lines)
+text = (text.replace("&", "&amp;").replace("<", "&lt;")).rstrip(" .")
+words, out, cur = text.split(), [], []
+for w in words:
+    cur.append(w)
+    if len(" ".join(cur)) >= 72:
+        out.append(" ".join(cur)); cur = []
+if cur:
+    out.append(" ".join(cur))
+entry = ["        <li>", f'          <span class="tag">v{ver}</span>',
+         f'          <span class="note">{out[0]}']
+entry += [f"          {l}" for l in out[1:]]
+entry[-1] += "."
+entry.append("          </span>")
+entry.append("        </li>")
+html = open(path, encoding="utf-8").read()
+marker = "        </li>\n"
+idx = html.rindex(marker)
+open(path, "w", encoding="utf-8").write(
+    html[:idx + len(marker)] + "\n".join(entry) + "\n" + html[idx + len(marker):])
+print(f"site changelog: added v{ver}")
+PY
+    fi
+fi
+
 git add Cargo.toml Cargo.lock README.md docs/api.md assets/static/openapi.json
+[ -f "$SITE" ] && git add "$SITE"
 git commit -m "Release v$VER" || exit 1
 git push origin rust || exit 1
 git tag "v$VER" || exit 1
