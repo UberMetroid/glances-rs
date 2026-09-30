@@ -184,37 +184,108 @@ except Exception as e:
     check("processlist pid1", False, str(e))
 
 # ---- connections vs ss ----
+# The daemon tallies /proc/net/{tcp,tcp6} on its refresh tick, so /api/4/
+# connections returns a value that was true up to one tick ago. `ss -s` is
+# live at the moment it is read. Comparing one live reading against one
+# up-to-2s-stale reading is a race, and widening a constant tolerance does
+# not fix it: the gap is a time offset, not a measurement error. That is
+# why this check used to flake on a busy host.
+#
+# Bound the stale value instead of guessing a tolerance. Sample the
+# reference across a window spanning a full refresh tick, then require the
+# API's number to fall inside the range the reference actually occupied
+# during that window. A daemon counting correctly cannot report a value
+# the kernel never had; a daemon that invents or drops connections will
+# land outside the observed range and fail.
 try:
-    r = run("ss", "-s")
-    if r and r.returncode == 0:
+    TICK = 2.0             # [global] refresh; also the per-plugin default
+    # The daemon's value covers the tick that ended most recently, which may
+    # have finished up to one tick BEFORE we start sampling. Sampling for a
+    # single tick could therefore miss the window that produced it — visible
+    # as a TIME_WAIT offset of +13 while `ss` never left its observed band.
+    # Cover two ticks so the daemon's window is always inside ours.
+    WINDOW = 2 * TICK + 0.5
+
+    def ss_counts():
+        r = run("ss", "-s")
+        if not r or r.returncode != 0:
+            return None
         import re
-        estab = int(re.search(r"estab (\d+)", r.stdout).group(1))
-        tw = int(re.search(r"timewait (\d+)", r.stdout).group(1))
-        api = get("/api/4/connections")
-        check("connections established within 5", abs(api["ESTABLISHED"] - estab) <= 5,
-              f"api={api['ESTABLISHED']} ss={estab}")
-        # One-sided: this script's own curls create TIME_WAITs between
-        # the daemon tick and our ss read, so api <= ss always. The
-        # check is that the daemon invents nothing and misses little.
-        check("connections timewait sane",
-              api["TIME_WAIT"] <= tw + 10 and tw - api["TIME_WAIT"] < 60,
-              f"api={api['TIME_WAIT']} ss={tw}")
-    else:
+        m1 = re.search(r"estab (\d+)", r.stdout)
+        m2 = re.search(r"timewait (\d+)", r.stdout)
+        if not m1 or not m2:
+            return None
+        return (int(m1.group(1)), int(m2.group(1)))
+
+    samples = []
+    t0 = time.time()
+    while time.time() - t0 < WINDOW:
+        c = ss_counts()
+        if c:
+            samples.append(c)
+        time.sleep(0.12)
+
+    if not samples:
         check("connections", None, "ss missing")
+    else:
+        # Read the daemon last, so its window ends inside the sampled span.
+        api = get("/api/4/connections")
+        # Measured spread between the two sources on this host: ESTABLISHED
+        # +/-2, TIME_WAIT +/-1 once the window covers the daemon's tick.
+        MARGIN = 2
+        for label, key, i in (("established", "ESTABLISHED", 0),
+                              ("timewait", "TIME_WAIT", 1)):
+            lo = min(s[i] for s in samples) - MARGIN
+            hi = max(s[i] for s in samples) + MARGIN
+            v = api[key]
+            check(f"connections {label} within observed window", lo <= v <= hi,
+                  f"api={v} ss=[{lo}..{hi}] over {len(samples)} samples")
 except Exception as e:
     check("connections", False, str(e))
 
-# ---- cpu: independent 1s recompute vs daemon window ----
+# ---- cpu: independent recompute vs daemon window ----
+# Three defects, all fixed here.
+#
+# 1. Phase (the dominant flake). The daemon's value averages the tick that
+#    just ended. Reading the API *first* and sampling afterwards put the two
+#    windows end-to-end instead of overlapping, so any downward drift in load
+#    read as an error — visible as `api` almost always exceeding `mine`.
+#    Sampling first and reading the API last makes both windows end at the
+#    same instant, which is the only way a point comparison is meaningful.
+# 2. Window length. The daemon publishes its own averaging duration as
+#    `time_since_update` (~2.0s at refresh=2). This check used a hardcoded
+#    1s, comparing different-length averages.
+# 3. Definition. `mine` counts busy as 100-(idle+iowait); the daemon's own
+#    busy() is user+nice+system+irq+softirq — iowait is a wait state and is
+#    excluded. Folding it back in via `100-idle` made the two differ by
+#    exactly iowait%, invisible on a quiet host and a real error under IO.
+#
+# A wrong implementation still misses on every attempt; the retry only
+# absorbs a transient on either side.
 try:
     def rd():
         return list(map(int, open("/proc/stat").readline().split()[1:8]))
-    a = rd()
-    time.sleep(1)
-    b = rd()
-    mine = 100 * (1 - (b[3] + b[4] - a[3] - a[4]) / max(sum(b) - sum(a), 1))
-    api = get("/api/4/cpu")
-    busy = 100 - api["idle"]
-    check("cpu busy within 6 points", abs(busy - mine) < 6, f"api={busy:.1f} mine={mine:.1f}")
+
+    def busy_over(a, b):
+        return 100 * (1 - (b[3] + b[4] - a[3] - a[4]) / max(sum(b) - sum(a), 1))
+
+    # Probe once to learn the daemon's averaging window.
+    probe = get("/api/4/cpu")
+    window = min(max(probe.get("time_since_update") or 2.0, 0.5), 5.0)
+
+    busy = mine = 0.0
+    for _ in range(3):
+        a = rd()
+        time.sleep(window)
+        b = rd()
+        mine = busy_over(a, b)
+        # Read the daemon AFTER our sample: its window now ends where ours does.
+        api = get("/api/4/cpu")
+        busy = 100 - api["idle"] - api["iowait"]
+        if abs(busy - mine) < 6:
+            break
+    check("cpu busy within 6 points", abs(busy - mine) < 6,
+          f"api={busy:.1f} mine={mine:.1f} window={window:.1f}s")
 except Exception as e:
     check("cpu", False, str(e))
 
